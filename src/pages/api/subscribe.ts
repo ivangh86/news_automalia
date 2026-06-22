@@ -1,9 +1,7 @@
 import type { APIRoute } from 'astro';
 
-// Origen del lead — segmenta news vs tuto vía referrer_url.
-// Nota: los tags de Buttondown requieren plan Basic; usamos referrer_url
-// (disponible en plan free) para distinguir el origen de cada suscriptor.
-const REFERRER = 'https://news.automalia.ai';
+// MailerLite — grupo "Noticias" (suscripciones desde news.automalia.ai)
+const GROUP_ID = '190959407708767549';
 
 export const POST: APIRoute = async ({ request }) => {
   const headers = { 'Content-Type': 'application/json' };
@@ -21,40 +19,33 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: 'Email inválido' }), { status: 400, headers });
   }
 
-  const apiKey = import.meta.env.BUTTONDOWN_API_KEY;
+  const apiKey = import.meta.env.MAILERLITE_API_KEY;
   if (!apiKey) {
-    console.error('BUTTONDOWN_API_KEY no configurada');
+    console.error('MAILERLITE_API_KEY no configurada');
     return new Response(JSON.stringify({ error: 'Error de configuración del servidor' }), { status: 500, headers });
   }
 
   try {
-    const res = await fetch('https://api.buttondown.email/v1/subscribers', {
+    const res = await fetch('https://connect.mailerlite.com/api/subscribers', {
       method: 'POST',
       headers: {
-        'Authorization': `Token ${apiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
-      body: JSON.stringify({
-        email_address: email,
-        referrer_url: REFERRER,
-      }),
+      body: JSON.stringify({ email, groups: [GROUP_ID] }),
     });
 
+    // MailerLite hace upsert: 200/201 tanto en alta nueva como en suscriptor existente.
     if (res.ok) {
       return new Response(JSON.stringify({ ok: true }), { status: 200, headers });
     }
 
-    // Suscriptor ya existente — Buttondown devuelve 400. Tratar como éxito suave.
     const data = await res.json().catch(() => ({}));
-    const detail = JSON.stringify(data).toLowerCase();
-    if (res.status === 400 && detail.includes('already')) {
-      return new Response(JSON.stringify({ ok: true, already: true }), { status: 200, headers });
-    }
-
-    console.error('Error Buttondown:', res.status, data);
+    console.error('Error MailerLite:', res.status, data);
     return new Response(JSON.stringify({ error: 'No se pudo completar la suscripción' }), { status: 502, headers });
   } catch (err) {
-    console.error('Error red Buttondown:', err);
+    console.error('Error red MailerLite:', err);
     return new Response(JSON.stringify({ error: 'Error de conexión' }), { status: 500, headers });
   }
 };
