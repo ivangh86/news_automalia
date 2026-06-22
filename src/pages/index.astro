@@ -3,46 +3,19 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 
 const noticias = (await getCollection('noticias', e => !e.data.draft))
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 4);
-
-const tutoriales = (await getCollection('tutoriales', e => !e.data.draft))
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 3);
-
-const cursoItems = (await getCollection('curso', e => !e.data.draft))
-  .sort((a, b) => a.data.orden - b.data.orden)
-  .slice(0, 3);
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
-<BaseLayout title="Inicio" description="The Claude Hub — Todo sobre Claude, Claude Code y Claude Cowork: novedades, tutoriales y guías prácticas.">
+<BaseLayout title="Inicio" description="news.automalia.ai — Novedades diarias sobre Claude, Claude Code y el ecosistema Anthropic. Curado sin ruido.">
 
   <section class="hero">
-    <div class="hero-label">The Claude Hub · automalia.ai</div>
-    <h1>Todo sobre <em>Claude</em>,<br/>curado sin ruido.</h1>
-    <p class="lead">Novedades de Anthropic, guías de Claude Code, trucos de productividad y un curso desde cero. Actualizado diariamente.</p>
+    <div class="hero-label">news.automalia.ai · The Claude Hub</div>
+    <h1>Novedades de <em>Claude</em>,<br/>sin ruido.</h1>
+    <p class="lead">Lanzamientos, actualizaciones y anuncios de Anthropic filtrados y explicados. Actualizado diariamente.</p>
     <div class="hero-actions">
       <a class="button button-primary" href="/noticias/">Ver noticias</a>
-      <a class="button button-secondary" href="/curso/">Empezar el curso</a>
+      <a class="button button-secondary" href="/newsletter/">Suscribirse</a>
     </div>
   </section>
-
-  <div class="card-grid" style="margin-bottom: 16px;">
-    <div class="card">
-      <div class="card-meta"><span class="tag">Noticias</span></div>
-      <h3 style="margin:0 0 6px;">Novedades diarias</h3>
-      <p>Lanzamientos, actualizaciones y anuncios de Anthropic filtrados y explicados.</p>
-    </div>
-    <div class="card">
-      <div class="card-meta"><span class="tag">Tutoriales</span></div>
-      <h3 style="margin:0 0 6px;">Guías paso a paso</h3>
-      <p>Configuraciones, flujos de trabajo y trucos de Claude Code que puedes aplicar hoy.</p>
-    </div>
-    <div class="card">
-      <div class="card-meta"><span class="tag">Curso</span></div>
-      <h3 style="margin:0 0 6px;">Desde cero a avanzado</h3>
-      <p>Módulos estructurados para aprender Claude y Claude Code a tu ritmo.</p>
-    </div>
-  </div>
 
   {noticias.length > 0 && (
     <div class="section-header">
@@ -61,47 +34,10 @@ const cursoItems = (await getCollection('curso', e => !e.data.draft))
         </div>
       ))}
     </div>
-    <p style="margin-top:16px"><a href="/noticias/" class="button button-secondary">Ver todas las noticias →</a></p>
   )}
 
-  {tutoriales.length > 0 && (
-    <div class="section-header">
-      <span class="section-label">Tutoriales</span>
-      <h2>Guías prácticas</h2>
-    </div>
-    <div class="card-grid">
-      {tutoriales.map((post) => (
-        <div class="card">
-          <div class="card-meta">
-            <span class="tag">{post.data.nivel}</span>
-            <span class="date">{post.data.pubDate.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}</span>
-          </div>
-          <h3><a href={`/tutoriales/${post.id.replace(/\.md$/, '')}/`}>{post.data.title}</a></h3>
-          <p>{post.data.description}</p>
-        </div>
-      ))}
-    </div>
-    <p style="margin-top:16px"><a href="/tutoriales/" class="button button-secondary">Ver todos los tutoriales →</a></p>
-  )}
-
-  {cursoItems.length > 0 && (
-    <div class="section-header">
-      <span class="section-label">Curso</span>
-      <h2>Claude desde cero</h2>
-    </div>
-    <div class="card-list">
-      {cursoItems.map((post) => (
-        <div class="card">
-          <div class="card-meta">
-            <span class="tag">{post.data.modulo}</span>
-            <span class="date">Lección {post.data.orden}</span>
-          </div>
-          <h3><a href={`/curso/${post.id.replace(/\.md$/, '')}/`}>{post.data.title}</a></h3>
-          <p>{post.data.description}</p>
-        </div>
-      ))}
-    </div>
-    <p style="margin-top:16px"><a href="/curso/" class="button button-secondary">Ver el curso completo →</a></p>
+  {noticias.length === 0 && (
+    <p class="lead" style="text-align:center;padding:40px 0;">Próximamente — las primeras noticias.</p>
   )}
 
 </BaseLayout>
