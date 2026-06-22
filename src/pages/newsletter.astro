@@ -1,31 +1,66 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
-<BaseLayout title="Newsletter" description="Suscríbete a The Claude Hub para recibir lo mejor sobre Claude cada semana." section="newsletter">
+<BaseLayout title="Newsletter" description="Suscríbete a The Claude Hub para recibir las novedades de Claude en tu correo." section="newsletter">
   <div class="hero" style="margin-bottom:32px">
     <div class="hero-label">Newsletter</div>
-    <h1 style="font-size:clamp(2rem,5vw,3.5rem);margin:0 0 12px;">Lo mejor de Claude,<br/><em>en tu correo</em></h1>
-    <p class="lead" style="margin:0 0 24px">Resumen semanal con las novedades más importantes de Claude y Claude Code, los mejores tutoriales de la semana y actualizaciones del curso.</p>
-    <div class="hero-actions">
-      <a class="button button-primary" href="/rss.xml">Suscribirse por RSS</a>
-    </div>
+    <h1 style="font-size:clamp(2rem,5vw,3.5rem);margin:0 0 12px;">Novedades de Claude,<br/><em>en tu correo</em></h1>
+    <p class="lead" style="margin:0 0 24px">Te avisamos cuando publicamos contenido nuevo sobre Claude, Claude Code y el ecosistema Anthropic. Sin spam.</p>
   </div>
 
   <div class="card" style="margin-bottom:16px">
-    <div class="card-meta"><span class="tag">Próximamente</span></div>
-    <h3 style="margin:0 0 8px;">Newsletter por email</h3>
-    <p>Estamos preparando una newsletter semanal con el mejor contenido sobre Claude. Por ahora, la forma más rápida de estar al día es el RSS.</p>
-    <p style="margin-top:12px"><a href="/rss.xml" class="button button-secondary">Abrir RSS →</a></p>
-  </div>
+    <div class="card-meta"><span class="tag">Suscríbete</span></div>
+    <h3 style="margin:0 0 8px;">Recibe el aviso de cada publicación</h3>
+    <p style="margin-bottom:16px">Déjanos tu email y te escribimos cuando haya algo que merezca la pena. Doble confirmación (recibirás un email para validar).</p>
 
-  <div class="card">
-    <div class="card-meta"><span class="tag">Qué incluirá</span></div>
-    <h3 style="margin:0 0 8px;">Formato de la newsletter</h3>
-    <ul style="color:#a3a3a3;line-height:1.8;margin:0;padding-left:20px">
-      <li>3-5 noticias de la semana sobre Claude y Anthropic</li>
-      <li>Tutorial destacado con instrucciones prácticas</li>
-      <li>Truco rápido de Claude Code</li>
-      <li>Progreso del curso y nuevas lecciones</li>
-    </ul>
+    <form id="sub-form" style="display:flex;gap:8px;flex-wrap:wrap;max-width:480px">
+      <input id="sub-email" name="email" type="email" required placeholder="tu@email.com"
+        style="flex:1;min-width:200px;padding:10px 14px;border-radius:8px;border:1px solid var(--border,#333);background:transparent;color:inherit;font:inherit" />
+      <button type="submit" class="button button-primary" id="sub-btn">Suscribirme</button>
+    </form>
+    <p id="sub-feedback" style="margin-top:12px;font-size:0.9rem" hidden></p>
+
+    <p style="margin-top:16px;font-size:0.85rem;opacity:0.7">¿Prefieres RSS? <a href="/rss.xml">Abrir feed →</a></p>
   </div>
 </BaseLayout>
+
+<script>
+  const form = document.getElementById('sub-form') as HTMLFormElement;
+  const email = document.getElementById('sub-email') as HTMLInputElement;
+  const btn = document.getElementById('sub-btn') as HTMLButtonElement;
+  const fb = document.getElementById('sub-feedback')!;
+
+  function show(msg: string, ok: boolean) {
+    fb.textContent = msg;
+    fb.style.color = ok ? '#4ade80' : '#f87171';
+    fb.hidden = false;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    fb.hidden = true;
+    btn.disabled = true;
+    const original = btn.textContent;
+    btn.textContent = 'Enviando…';
+
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.value }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        show(json.already ? 'Ya estabas suscrito. ¡Gracias!' : '✓ Revisa tu correo para confirmar la suscripción.', true);
+        form.reset();
+      } else {
+        show(json.error ?? 'No se pudo completar. Inténtalo de nuevo.', false);
+      }
+    } catch {
+      show('Error de conexión. Prueba más tarde.', false);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  });
+</script>
